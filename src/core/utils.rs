@@ -1,11 +1,13 @@
+use std::ffi::OsStr;
 use std::mem;
+use std::os::windows::ffi::OsStrExt;
 use std::ptr::null_mut;
 use winapi::ctypes::c_void;
 use winapi::um::errhandlingapi::GetLastError;
 use winapi::um::handleapi::CloseHandle;
-use winapi::um::synchapi::WaitForSingleObject;
 use winapi::um::memoryapi::{VirtualAlloc, VirtualProtect};
 use winapi::um::processthreadsapi::{CreateThread, GetCurrentProcessId};
+use winapi::um::synchapi::WaitForSingleObject;
 use winapi::um::winnt::{MEM_COMMIT, MEM_RESERVE, PAGE_EXECUTE_READWRITE, PAGE_READWRITE};
 
 pub fn get_current_pid() -> u32 {
@@ -79,4 +81,11 @@ pub fn wait_for_single_object(handle: *mut c_void, milliseconds: u32) -> Result<
     }
 
     Ok(())
+}
+
+pub fn to_wide_str(s: &str) -> Vec<u16> {
+    OsStr::new(s)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect()
 }
