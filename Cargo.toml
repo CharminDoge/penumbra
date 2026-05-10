@@ -1,0 +1,18 @@
+[package]
+name = "penumbra"
+version = "0.1.0"
+edition = "2024"
+
+# https://doc.rust-lang.org/cargo/reference/profiles.html
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+debug = "none"
+overflow-checks = false
+incremental = false
+
+[dependencies]
+winapi = { version = "0.3.9", features = ["errhandlingapi", "handleapi", "memoryapi", "processthreadsapi", "synchapi", "winnt"] }
