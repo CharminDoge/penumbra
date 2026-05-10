@@ -3,33 +3,27 @@ use crate::core;
 use windows_sys::Win32::System::Registry::{HKEY, HKEY_LOCAL_MACHINE};
 
 const SYSKEY_LENGTH: usize = 16;
+const SYSKEY_INFO_LENGTH: usize = 8 + 1;
+const SYSKEY_NAMES: [&str; 4] = ["JD", "Skew1", "GBG", "Data"];
+const SYSKEY_PERMUT: [u8; 16] = [7, 3, 10, 8, 15, 9, 1, 2, 4, 13, 5, 0, 14, 12, 6, 11];
 
 pub fn get_sys_key() -> Result<[u8; SYSKEY_LENGTH], u32> {
     let system_base = core::registry::reg_open_key_exw(HKEY_LOCAL_MACHINE, "SYSTEM")?;
-
     let control_set = get_current_control_set(system_base)?;
-
     let control_lsa = core::registry::reg_open_key_exw(control_set, "Control\\LSA")?;
-
     read_sys_key(control_lsa)
 }
-
-const SYSKEY_INFO_LENGTH: u32 = 8 + 1;
-const SYSKEY_NAMES: [&str; 4] = ["JD", "Skew1", "GBG", "Data"];
-const SYSKEY_PERMUT: [u8; 16] = [7, 3, 10, 8, 15, 9, 1, 2, 4, 13, 5, 0, 14, 12, 6, 11];
 
 pub fn read_sys_key(control_lsa: HKEY) -> Result<[u8; SYSKEY_LENGTH], u32> {
     let mut sys_key: [u8; SYSKEY_LENGTH] = [0u8; SYSKEY_LENGTH];
     for (i, syskey_name) in SYSKEY_NAMES.iter().enumerate() {
         match core::registry::reg_open_key_exw(control_lsa, syskey_name) {
             Ok(lsa_key) => {
-                let data = core::registry::reg_query_info_w(lsa_key, SYSKEY_INFO_LENGTH as usize)?;
-
+                let data = core::registry::reg_query_info_w(lsa_key, SYSKEY_INFO_LENGTH)?;
                 let hex_data = parse_hex_utf16(&data);
                 let bytes = hex_data.to_le_bytes();
-
                 for j in 0..4 {
-                    sys_key[SYSKEY_PERMUT[i * 4 + j] as usize] = bytes[j]
+                    sys_key[SYSKEY_PERMUT[i * 4 + j] as usize] = bytes[j];
                 }
             }
             Err(e) => {
@@ -37,12 +31,10 @@ pub fn read_sys_key(control_lsa: HKEY) -> Result<[u8; SYSKEY_LENGTH], u32> {
                     "[!] reg_open_key_exw on {} failed with error: {}",
                     syskey_name, e
                 );
-
                 return Err(e);
             }
         };
     }
-
     Ok(sys_key)
 }
 
@@ -72,7 +64,7 @@ fn parse_hex_utf16(buf: &[u16]) -> u32 {
 
 const CONTROLSET_SOURCES: [&str; 2] = ["Current", "Default"];
 
-pub fn get_current_control_set(system_base: HKEY) -> Result<HKEY, u32> {
+fn get_current_control_set(system_base: HKEY) -> Result<HKEY, u32> {
     let select = core::registry::reg_open_key_exw(system_base, "Select")?;
 
     let mut last_err = 0;

@@ -17,21 +17,17 @@ RUN set -eux; \
         llvm-19 \
         lld-19 \
         tar; \
-
     ln -s clang-19    /usr/bin/clang; \
     ln -s clang       /usr/bin/clang++; \
     ln -s lld-19      /usr/bin/ld.lld; \
-
     ln -s clang-19    /usr/bin/clang-cl; \
     ln -s llvm-ar-19  /usr/bin/llvm-lib; \
     ln -s lld-link-19 /usr/bin/lld-link; \
-
     clang++ -v; \
     ld.lld -v; \
     llvm-lib -v; \
     clang-cl -v; \
     lld-link --version; \
-
     update-alternatives --install /usr/bin/cc  cc  /usr/bin/clang   100; \
     update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100; \
     apt-get remove -y --auto-remove gpg; \
@@ -54,11 +50,8 @@ RUN set -eux; \
 ENV CC_x86_64_pc_windows_msvc="clang-cl" \
     CXX_x86_64_pc_windows_msvc="clang-cl" \
     AR_x86_64_pc_windows_msvc="llvm-lib" \
-
     CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER="lld-link" \
-
     CL_FLAGS="-Wno-unused-command-line-argument -fuse-ld=lld-link /vctoolsdir /xwin/crt /winsdkdir /xwin/sdk" \
-
     CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS="-Lnative=/xwin/crt/lib/x86_64 -Lnative=/xwin/sdk/lib/um/x86_64 -Lnative=/xwin/sdk/lib/ucrt/x86_64"
 
 ENV CFLAGS_x86_64_pc_windows_msvc="$CL_FLAGS" \
